@@ -3,6 +3,7 @@ import { InvoiceTemplateProps } from "./index";
 export default function ModernTemplate({
   invoiceData,
   currencySymbols,
+  showNotes = false,
 }: InvoiceTemplateProps) {
   return (
     <div className="p-8 bg-white">
@@ -20,7 +21,7 @@ export default function ModernTemplate({
             <p className="text-blue-100 text-sm">{invoiceData.companyPhone}</p>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-bold mb-2">INVOICE</h2>
+            <h2 className="text-3xl font-bold mb-2 text-center">INVOICE</h2>
             <p className="text-blue-100 text-sm">
               <span className="font-semibold">Invoice #:</span>{" "}
               {invoiceData.invoiceNumber}
@@ -47,16 +48,16 @@ export default function ModernTemplate({
         <table className="w-full">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-3 px-4 text-left font-semibold text-gray-600">
+              <th className="py-3 px-4 text-left font-semibold text-gray-600 w-1/2">
                 Description
               </th>
-              <th className="py-3 px-4 text-right font-semibold text-gray-600">
+              <th className="py-3 px-4 text-right font-semibold text-gray-600 w-1/6">
                 Quantity
               </th>
-              <th className="py-3 px-4 text-right font-semibold text-gray-600">
+              <th className="py-3 px-4 text-right font-semibold text-gray-600 w-1/6">
                 Price
               </th>
-              <th className="py-3 px-4 text-right font-semibold text-gray-600">
+              <th className="py-3 px-4 text-right font-semibold text-gray-600 w-1/6">
                 Amount
               </th>
             </tr>
@@ -116,11 +117,13 @@ export default function ModernTemplate({
         </div>
       </div>
 
-      {/* Notes */}
-      <div className="border-t border-gray-200 pt-4">
-        <h3 className="font-semibold mb-2 text-gray-700">Notes:</h3>
-        <p className="text-gray-600">{invoiceData.notes}</p>
-      </div>
+      {/* Notes - Only show if enabled */}
+      {showNotes && invoiceData.notes && (
+        <div className="border-t border-gray-200 pt-4">
+          <h3 className="font-semibold mb-2 text-gray-700">Notes:</h3>
+          <p className="text-gray-600">{invoiceData.notes}</p>
+        </div>
+      )}
     </div>
   );
 }

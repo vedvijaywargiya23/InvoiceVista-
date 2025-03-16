@@ -7,9 +7,10 @@ export enum InvoiceTemplateType {
 }
 
 export interface InvoiceTemplateProps {
-  type: InvoiceTemplateType;
+  type?: InvoiceTemplateType;
   invoiceData: any;
   currencySymbols: Record<string, string>;
+  showNotes?: boolean;
 }
 
 export { default as ClassicTemplate } from "./classic-template";

@@ -4,6 +4,7 @@ import Sidebar from "../components/layout/Sidebar";
 import FinancialSummary from "../components/dashboard/FinancialSummary";
 import RevenueChart from "../components/dashboard/RevenueChart";
 import RecentInvoices from "../components/dashboard/RecentInvoices";
+import DashboardStats from "../components/dashboard/dashboard-stats";
 
 const Dashboard = () => {
   return (
@@ -20,6 +21,13 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-6">
+            {/* Invoice Stats Section */}
+            <DashboardStats
+              totalInvoices={42}
+              paidInvoices={28}
+              unpaidInvoices={14}
+            />
+
             {/* Financial Summary Section */}
             <FinancialSummary
               totalRevenue={24500}

@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import AuthLayout from "./auth-layout";
 import {
   Building2,
@@ -14,6 +15,8 @@ import {
   CheckCircle2,
   FileText,
   Shield,
+  User,
+  Briefcase,
 } from "lucide-react";
 
 export default function Signup() {
@@ -22,6 +25,7 @@ export default function Signup() {
     email: "",
     password: "",
     confirmPassword: "",
+    accountType: "business", // Default to business
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -92,6 +96,7 @@ export default function Signup() {
         JSON.stringify({
           businessName: formData.businessName,
           email: formData.email,
+          accountType: formData.accountType,
           isLoggedIn: true,
         }),
       );
@@ -163,11 +168,48 @@ export default function Signup() {
 
       <form onSubmit={handleSignup} className="space-y-5">
         <div className="space-y-2">
+          <Label className="text-gray-700">Account Type</Label>
+          <RadioGroup
+            defaultValue={formData.accountType}
+            className="flex space-x-4 pt-2"
+            onValueChange={(value) => {
+              setFormData({
+                ...formData,
+                accountType: value,
+              });
+            }}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="freelancer" id="freelancer" />
+              <Label
+                htmlFor="freelancer"
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <User className="h-4 w-4 text-blue-600" /> Freelancer
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="business" id="business" />
+              <Label
+                htmlFor="business"
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <Briefcase className="h-4 w-4 text-blue-600" /> Business
+                Professional
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <div className="space-y-2">
           <Label
             htmlFor="businessName"
             className="text-gray-700 flex items-center gap-2"
           >
-            <Building2 className="h-4 w-4" /> Business Name
+            <Building2 className="h-4 w-4" />{" "}
+            {formData.accountType === "freelancer"
+              ? "Your Name"
+              : "Business Name"}
           </Label>
           <Input
             id="businessName"

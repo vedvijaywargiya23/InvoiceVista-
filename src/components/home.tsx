@@ -27,11 +27,56 @@ function Home() {
             </div>
             <h1 className="text-2xl font-bold text-blue-700">InvoiceVista</h1>
           </div>
+          <div className="flex items-center space-x-8">
+            <nav>
+              <ul className="flex space-x-6">
+                <li>
+                  <a
+                    href="#"
+                    className="text-gray-700 hover:text-blue-600 font-medium"
+                  >
+                    Home
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#features"
+                    className="text-gray-700 hover:text-blue-600 font-medium"
+                  >
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#pricing"
+                    className="text-gray-700 hover:text-blue-600 font-medium"
+                  >
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#testimonials"
+                    className="text-gray-700 hover:text-blue-600 font-medium"
+                  >
+                    Testimonials
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#contact"
+                    className="text-gray-700 hover:text-blue-600 font-medium"
+                  >
+                    Contact
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
           <div className="flex gap-4">
             <Button
               onClick={() => navigate("/login")}
-              variant="ghost"
-              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               Sign In
             </Button>
@@ -287,12 +332,6 @@ function Home() {
               Create beautiful, customizable invoices with multiple professional
               templates to match your brand identity.
             </p>
-            <a
-              href="#"
-              className="text-blue-600 font-medium flex items-center hover:text-blue-800"
-            >
-              Learn more <ChevronRight className="h-4 w-4 ml-1" />
-            </a>
           </div>
 
           {/* Feature 2 */}
@@ -307,12 +346,6 @@ function Home() {
               Easily manage your clients' information, track their invoices, and
               maintain professional relationships.
             </p>
-            <a
-              href="#"
-              className="text-blue-600 font-medium flex items-center hover:text-blue-800"
-            >
-              Learn more <ChevronRight className="h-4 w-4 ml-1" />
-            </a>
           </div>
 
           {/* Feature 3 */}
@@ -327,18 +360,12 @@ function Home() {
               Gain valuable insights into your business with comprehensive
               financial reports and visualizations.
             </p>
-            <a
-              href="#"
-              className="text-blue-600 font-medium flex items-center hover:text-blue-800"
-            >
-              Learn more <ChevronRight className="h-4 w-4 ml-1" />
-            </a>
           </div>
         </div>
       </div>
 
       {/* Testimonials */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-16" id="testimonials">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
           What Our Customers Say
         </h2>
@@ -460,7 +487,7 @@ function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12">
+      <footer className="bg-slate-900 text-slate-400 py-12" id="contact">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
@@ -477,12 +504,18 @@ function Home() {
                 <h3 className="text-white font-medium mb-4">Product</h3>
                 <ul className="space-y-2">
                   <li>
-                    <a href="#" className="hover:text-white transition-colors">
+                    <a
+                      href="#features"
+                      className="hover:text-white transition-colors"
+                    >
                       Features
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors">
+                    <a
+                      href="#pricing"
+                      className="hover:text-white transition-colors"
+                    >
                       Pricing
                     </a>
                   </li>
@@ -502,7 +535,10 @@ function Home() {
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors">
+                    <a
+                      href="#contact"
+                      className="hover:text-white transition-colors"
+                    >
                       Contact
                     </a>
                   </li>

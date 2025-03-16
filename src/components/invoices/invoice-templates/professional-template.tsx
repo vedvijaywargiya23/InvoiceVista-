@@ -3,6 +3,7 @@ import { InvoiceTemplateProps } from "./index";
 export default function ProfessionalTemplate({
   invoiceData,
   currencySymbols,
+  showNotes = false,
 }: InvoiceTemplateProps) {
   return (
     <div className="p-8 bg-white">
@@ -10,13 +11,6 @@ export default function ProfessionalTemplate({
       <div className="border-b-4 border-blue-600 pb-6 mb-8">
         <div className="flex justify-between items-start">
           <div>
-            {invoiceData.companyLogo && (
-              <img
-                src={invoiceData.companyLogo}
-                alt="Company Logo"
-                className="h-16 mb-4"
-              />
-            )}
             <h1 className="text-2xl font-bold text-gray-800">
               {invoiceData.companyName}
             </h1>
@@ -27,7 +21,9 @@ export default function ProfessionalTemplate({
             <p className="text-gray-600">{invoiceData.companyPhone}</p>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-bold text-blue-600 mb-2">INVOICE</h2>
+            <h2 className="text-3xl font-bold text-blue-600 mb-2 text-center">
+              INVOICE
+            </h2>
             <div className="bg-gray-100 p-4 rounded-md">
               <p className="text-gray-700">
                 <span className="font-semibold">Invoice #:</span>{" "}
@@ -41,6 +37,15 @@ export default function ProfessionalTemplate({
                 {invoiceData.dueDate}
               </p>
             </div>
+            {invoiceData.companyLogo && (
+              <div className="mt-4 flex justify-end">
+                <img
+                  src={invoiceData.companyLogo}
+                  alt="Company Logo"
+                  className="h-16"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -56,10 +61,10 @@ export default function ProfessionalTemplate({
         <table className="w-full">
           <thead>
             <tr className="bg-blue-600 text-white">
-              <th className="py-3 px-4 text-left">Description</th>
-              <th className="py-3 px-4 text-right">Quantity</th>
-              <th className="py-3 px-4 text-right">Price</th>
-              <th className="py-3 px-4 text-right">Amount</th>
+              <th className="py-3 px-4 text-left w-1/2">Description</th>
+              <th className="py-3 px-4 text-right w-1/6">Quantity</th>
+              <th className="py-3 px-4 text-right w-1/6">Price</th>
+              <th className="py-3 px-4 text-right w-1/6">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -117,11 +122,13 @@ export default function ProfessionalTemplate({
         </div>
       </div>
 
-      {/* Notes */}
-      <div className="border-t border-gray-200 pt-4">
-        <h3 className="font-semibold mb-2 text-gray-800">Notes:</h3>
-        <p className="text-gray-600">{invoiceData.notes}</p>
-      </div>
+      {/* Notes - Only show if enabled */}
+      {showNotes && invoiceData.notes && (
+        <div className="border-t border-gray-200 pt-4">
+          <h3 className="font-semibold mb-2 text-gray-800">Notes:</h3>
+          <p className="text-gray-600">{invoiceData.notes}</p>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="mt-8 pt-4 border-t border-gray-200 text-center text-gray-500 text-sm">

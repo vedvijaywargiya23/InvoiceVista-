@@ -3,6 +3,7 @@ import { InvoiceTemplateProps } from "./index";
 export default function MinimalTemplate({
   invoiceData,
   currencySymbols,
+  showNotes = false,
 }: InvoiceTemplateProps) {
   return (
     <div className="p-8 bg-white">
@@ -19,7 +20,7 @@ export default function MinimalTemplate({
           <p className="text-gray-500 text-sm">{invoiceData.companyPhone}</p>
         </div>
         <div className="text-right">
-          <h2 className="text-2xl font-light tracking-wide text-gray-800">
+          <h2 className="text-2xl font-light tracking-wide text-gray-800 text-center">
             INVOICE
           </h2>
           <p className="text-gray-500 text-sm mt-1">
@@ -40,16 +41,16 @@ export default function MinimalTemplate({
       <table className="w-full mb-12">
         <thead>
           <tr>
-            <th className="py-2 text-left text-sm font-normal text-gray-500">
+            <th className="py-2 text-left text-sm font-normal text-gray-500 w-1/2">
               DESCRIPTION
             </th>
-            <th className="py-2 text-right text-sm font-normal text-gray-500">
+            <th className="py-2 text-right text-sm font-normal text-gray-500 w-1/6">
               QTY
             </th>
-            <th className="py-2 text-right text-sm font-normal text-gray-500">
+            <th className="py-2 text-right text-sm font-normal text-gray-500 w-1/6">
               PRICE
             </th>
-            <th className="py-2 text-right text-sm font-normal text-gray-500">
+            <th className="py-2 text-right text-sm font-normal text-gray-500 w-1/6">
               AMOUNT
             </th>
           </tr>
@@ -101,10 +102,12 @@ export default function MinimalTemplate({
         </div>
       </div>
 
-      {/* Notes - Minimal */}
-      <div className="text-sm text-gray-500">
-        <p>{invoiceData.notes}</p>
-      </div>
+      {/* Notes - Only show if enabled */}
+      {showNotes && invoiceData.notes && (
+        <div className="text-sm text-gray-500">
+          <p>{invoiceData.notes}</p>
+        </div>
+      )}
     </div>
   );
 }

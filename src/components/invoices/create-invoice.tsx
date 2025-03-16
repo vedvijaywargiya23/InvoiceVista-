@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { Checkbox } from "../ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Select,
@@ -18,7 +19,9 @@ import {
   Send,
   Mail,
   FileText,
+  UserPlus,
 } from "lucide-react";
+import AddClientDialog from "../clients/add-client-dialog";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -37,6 +40,8 @@ export default function CreateInvoice() {
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateType>(
     InvoiceTemplateType.CLASSIC,
   );
+  const [useProfileInfo, setUseProfileInfo] = useState(true);
+  const [showNotes, setShowNotes] = useState(false);
   const [invoiceData, setInvoiceData] = useState({
     invoiceNumber: `INV-${Math.floor(Math.random() * 10000)
       .toString()
@@ -61,6 +66,17 @@ export default function CreateInvoice() {
     currency: "USD",
   });
 
+  // Load user profile data
+  useEffect(() => {
+    const userProfile = JSON.parse(localStorage.getItem("user") || "{}");
+    if (userProfile && userProfile.businessName) {
+      setInvoiceData((prev) => ({
+        ...prev,
+        companyName: userProfile.businessName || prev.companyName,
+      }));
+    }
+  }, []);
+
   const currencySymbols: Record<string, string> = {
     USD: "$",
     EUR: "€",
@@ -71,39 +87,51 @@ export default function CreateInvoice() {
     AUD: "A$",
   };
 
-  // Mock client list
-  const clients = [
-    {
-      id: 1,
-      name: "Acme Corporation",
-      email: "contact@acmecorp.com",
-      address: "123 Acme St, Acme City, AC 12345",
-    },
-    {
-      id: 2,
-      name: "Globex Industries",
-      email: "info@globex.com",
-      address: "456 Globex Ave, Globex City, GX 67890",
-    },
-    {
-      id: 3,
-      name: "Stark Enterprises",
-      email: "tony@stark.com",
-      address: "789 Stark Tower, New York, NY 10001",
-    },
-    {
-      id: 4,
-      name: "Wayne Industries",
-      email: "bruce@wayne.com",
-      address: "101 Wayne Manor, Gotham City, GC 54321",
-    },
-    {
-      id: 5,
-      name: "Umbrella Corporation",
-      email: "info@umbrella.com",
-      address: "202 Umbrella Blvd, Raccoon City, RC 98765",
-    },
-  ];
+  // Get clients from localStorage or use mock data if none exist
+  const [clients, setClients] = useState(() => {
+    const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+    if (savedClients.length > 0) {
+      return savedClients;
+    }
+
+    // Mock client list as fallback
+    return [
+      {
+        id: 1,
+        name: "Acme Corporation",
+        email: "contact@acmecorp.com",
+        address: "123 Acme St, Acme City, AC 12345",
+      },
+      {
+        id: 2,
+        name: "Globex Industries",
+        email: "info@globex.com",
+        address: "456 Globex Ave, Globex City, GX 67890",
+      },
+      {
+        id: 3,
+        name: "Stark Enterprises",
+        email: "tony@stark.com",
+        address: "789 Stark Tower, New York, NY 10001",
+      },
+      {
+        id: 4,
+        name: "Wayne Industries",
+        email: "bruce@wayne.com",
+        address: "101 Wayne Manor, Gotham City, GC 54321",
+      },
+      {
+        id: 5,
+        name: "Umbrella Corporation",
+        email: "info@umbrella.com",
+        address: "202 Umbrella Blvd, Raccoon City, RC 98765",
+      },
+    ];
+  });
+
+  const handleClientAdded = (newClient: any) => {
+    setClients([...clients, newClient]);
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -204,6 +232,7 @@ export default function CreateInvoice() {
       invoiceData,
       currencySymbols,
       type: selectedTemplate,
+      showNotes,
     };
 
     switch (selectedTemplate) {
@@ -412,27 +441,43 @@ export default function CreateInvoice() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="client">Client</Label>
-                {hasClients ? (
-                  <Select onValueChange={handleClientChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a client" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients.map((client) => (
-                        <SelectItem
-                          key={client.id}
-                          value={client.id.toString()}
-                        >
-                          {client.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="border rounded-md p-3 bg-gray-50 text-sm text-gray-600">
-                    No clients found. Please create a client first.
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  {hasClients ? (
+                    <div className="flex-1">
+                      <Select onValueChange={handleClientChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a client" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clients.map((client) => (
+                            <SelectItem
+                              key={client.id}
+                              value={client.id.toString()}
+                            >
+                              {client.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div className="flex-1 border rounded-md p-3 bg-gray-50 text-sm text-gray-600">
+                      No clients found. Please create a client first.
+                    </div>
+                  )}
+                  <AddClientDialog
+                    onClientAdded={handleClientAdded}
+                    trigger={
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                </div>
               </div>
             </div>
           </CardContent>
@@ -444,6 +489,19 @@ export default function CreateInvoice() {
             <CardTitle>Your Company Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2 mb-4">
+              <Checkbox
+                id="useProfileInfo"
+                checked={useProfileInfo}
+                onCheckedChange={(checked) =>
+                  setUseProfileInfo(checked as boolean)
+                }
+              />
+              <Label htmlFor="useProfileInfo" className="text-sm text-gray-700">
+                Use information from my profile
+              </Label>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="companyLogo">Company Logo</Label>
               <div className="flex items-center gap-4">
@@ -461,6 +519,7 @@ export default function CreateInvoice() {
                   type="file"
                   accept="image/*"
                   onChange={handleLogoChange}
+                  disabled={useProfileInfo}
                 />
               </div>
             </div>
@@ -475,6 +534,7 @@ export default function CreateInvoice() {
                     companyName: e.target.value,
                   })
                 }
+                disabled={useProfileInfo}
               />
             </div>
             <div className="space-y-2">
@@ -488,6 +548,7 @@ export default function CreateInvoice() {
                     companyAddress: e.target.value,
                   })
                 }
+                disabled={useProfileInfo}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -503,6 +564,7 @@ export default function CreateInvoice() {
                       companyEmail: e.target.value,
                     })
                   }
+                  disabled={useProfileInfo}
                 />
               </div>
               <div className="space-y-2">
@@ -516,6 +578,7 @@ export default function CreateInvoice() {
                       companyPhone: e.target.value,
                     })
                   }
+                  disabled={useProfileInfo}
                 />
               </div>
             </div>
@@ -672,7 +735,19 @@ export default function CreateInvoice() {
       {/* Notes */}
       <Card>
         <CardHeader>
-          <CardTitle>Notes</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Notes</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="showNotes"
+                checked={showNotes}
+                onCheckedChange={(checked) => setShowNotes(checked as boolean)}
+              />
+              <Label htmlFor="showNotes" className="text-sm text-gray-700">
+                Include notes on invoice
+              </Label>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Textarea
@@ -680,7 +755,7 @@ export default function CreateInvoice() {
             onChange={(e) =>
               setInvoiceData({ ...invoiceData, notes: e.target.value })
             }
-            placeholder="Add any notes or payment instructions"
+            placeholder="Add any notes or payment instructions (optional)"
             className="min-h-[100px]"
           />
         </CardContent>

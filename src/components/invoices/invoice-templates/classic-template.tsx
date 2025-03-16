@@ -3,6 +3,7 @@ import { InvoiceTemplateProps } from "./index";
 export default function ClassicTemplate({
   invoiceData,
   currencySymbols,
+  showNotes = false,
 }: InvoiceTemplateProps) {
   return (
     <div className="p-8 bg-white">
@@ -26,7 +27,9 @@ export default function ClassicTemplate({
           <p className="text-gray-600">{invoiceData.companyPhone}</p>
         </div>
         <div className="text-right">
-          <h2 className="text-3xl font-bold text-blue-600 mb-2">INVOICE</h2>
+          <h2 className="text-3xl font-bold text-blue-600 mb-2 text-center">
+            INVOICE
+          </h2>
           <p className="text-gray-600">
             <span className="font-semibold">Invoice #:</span>{" "}
             {invoiceData.invoiceNumber}
@@ -51,10 +54,10 @@ export default function ClassicTemplate({
       <table className="w-full mb-8">
         <thead>
           <tr className="bg-gray-100">
-            <th className="py-3 px-4 text-left">Description</th>
-            <th className="py-3 px-4 text-right">Quantity</th>
-            <th className="py-3 px-4 text-right">Price</th>
-            <th className="py-3 px-4 text-right">Amount</th>
+            <th className="py-3 px-4 text-left w-1/2">Description</th>
+            <th className="py-3 px-4 text-right w-1/6">Quantity</th>
+            <th className="py-3 px-4 text-right w-1/6">Price</th>
+            <th className="py-3 px-4 text-right w-1/6">Amount</th>
           </tr>
         </thead>
         <tbody>
@@ -102,11 +105,13 @@ export default function ClassicTemplate({
         </div>
       </div>
 
-      {/* Notes */}
-      <div className="border-t border-gray-300 pt-4">
-        <h3 className="font-semibold mb-2">Notes:</h3>
-        <p className="text-gray-600">{invoiceData.notes}</p>
-      </div>
+      {/* Notes - Only show if enabled */}
+      {showNotes && invoiceData.notes && (
+        <div className="border-t border-gray-300 pt-4">
+          <h3 className="font-semibold mb-2">Notes:</h3>
+          <p className="text-gray-600">{invoiceData.notes}</p>
+        </div>
+      )}
     </div>
   );
 }
