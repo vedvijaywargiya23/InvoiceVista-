@@ -25,7 +25,7 @@ import AddClientDialog from "../clients/add-client-dialog";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import InvoiceTemplateSelector from "./invoice-template-selector";
+// Template selector removed
 import {
   InvoiceTemplateType,
   ClassicTemplate,
@@ -37,9 +37,8 @@ import {
 
 export default function CreateInvoice() {
   const invoiceRef = useRef<HTMLDivElement>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateType>(
-    InvoiceTemplateType.CLASSIC,
-  );
+  // Always use corporate template
+  const selectedTemplate = InvoiceTemplateType.CORPORATE;
   const [useProfileInfo, setUseProfileInfo] = useState(true);
   const [showNotes, setShowNotes] = useState(false);
   const [invoiceData, setInvoiceData] = useState({
@@ -52,7 +51,6 @@ export default function CreateInvoice() {
       "yyyy-MM-dd",
     ),
     client: "",
-    companyLogo: null,
     companyName: "Your Company",
     companyAddress: "123 Business St, City, Country",
     companyEmail: "contact@yourcompany.com",
@@ -64,15 +62,27 @@ export default function CreateInvoice() {
     taxAmount: 0,
     total: 0,
     currency: "USD",
+    bankDetails: {
+      accountNumber: "",
+      ifscCode: "",
+      accountName: "",
+      bankName: "",
+      upiId: "",
+    },
   });
 
   // Load user profile data
   useEffect(() => {
     const userProfile = JSON.parse(localStorage.getItem("user") || "{}");
-    if (userProfile && userProfile.businessName) {
+    if (userProfile) {
       setInvoiceData((prev) => ({
         ...prev,
-        companyName: userProfile.businessName || prev.companyName,
+        companyName:
+          userProfile.name || userProfile.businessName || prev.companyName,
+        companyAddress: userProfile.address || prev.companyAddress,
+        companyEmail: userProfile.email || prev.companyEmail,
+        companyPhone: userProfile.phone || prev.companyPhone,
+        bankDetails: userProfile.bankDetails || {},
       }));
     }
   }, []);
@@ -87,74 +97,79 @@ export default function CreateInvoice() {
     AUD: "A$",
   };
 
-  // Get clients from localStorage or use mock data if none exist
-  const [clients, setClients] = useState(() => {
-    const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
-    if (savedClients.length > 0) {
-      return savedClients;
-    }
+  // Get clients from localStorage only, no mock data for new users
+  const [clients, setClients] = useState<any[]>([]);
 
-    // Mock client list as fallback
-    return [
-      {
-        id: 1,
-        name: "Acme Corporation",
-        email: "contact@acmecorp.com",
-        address: "123 Acme St, Acme City, AC 12345",
-      },
-      {
-        id: 2,
-        name: "Globex Industries",
-        email: "info@globex.com",
-        address: "456 Globex Ave, Globex City, GX 67890",
-      },
-      {
-        id: 3,
-        name: "Stark Enterprises",
-        email: "tony@stark.com",
-        address: "789 Stark Tower, New York, NY 10001",
-      },
-      {
-        id: 4,
-        name: "Wayne Industries",
-        email: "bruce@wayne.com",
-        address: "101 Wayne Manor, Gotham City, GC 54321",
-      },
-      {
-        id: 5,
-        name: "Umbrella Corporation",
-        email: "info@umbrella.com",
-        address: "202 Umbrella Blvd, Raccoon City, RC 98765",
-      },
-    ];
-  });
+  // Load clients from localStorage on component mount
+  useEffect(() => {
+    const loadClients = () => {
+      const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+      setClients(savedClients);
+    };
+
+    loadClients();
+
+    // Listen for client updates
+    window.addEventListener("clientsUpdated", loadClients);
+
+    return () => {
+      window.removeEventListener("clientsUpdated", loadClients);
+    };
+  }, []);
 
   const handleClientAdded = (newClient: any) => {
-    setClients([...clients, newClient]);
+    // Get the latest clients from localStorage first
+    const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+    const updatedClients = [...savedClients, newClient];
+    setClients(updatedClients);
+    localStorage.setItem("clients", JSON.stringify(updatedClients));
+    window.dispatchEvent(new CustomEvent("clientsUpdated"));
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setInvoiceData({
-          ...invoiceData,
-          companyLogo: reader.result as string,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // Logo functionality removed
 
   const handleClientChange = (clientId: string) => {
-    const selectedClient = clients.find((c) => c.id.toString() === clientId);
+    // Get the latest clients from localStorage first
+    const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+    const selectedClient = savedClients.find(
+      (c) => c.id.toString() === clientId,
+    );
     if (selectedClient) {
       setInvoiceData({
         ...invoiceData,
         client: selectedClient.name,
       });
     }
+  };
+
+  // Function to save a new client to localStorage
+  const saveNewClient = (clientName: string) => {
+    if (!clientName.trim()) return;
+
+    // Get the latest clients from localStorage first
+    const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+
+    // Check if client already exists
+    const existingClient = savedClients.find(
+      (c) => c.name.toLowerCase() === clientName.toLowerCase(),
+    );
+    if (existingClient) return existingClient;
+
+    const newClient = {
+      id: Date.now(),
+      name: clientName,
+      contact: "",
+      email: "",
+      phone: "",
+      status: "Active",
+      address: "",
+    };
+
+    const updatedClients = [...savedClients, newClient];
+    setClients(updatedClients);
+    localStorage.setItem("clients", JSON.stringify(updatedClients));
+    window.dispatchEvent(new CustomEvent("clientsUpdated"));
+    return newClient;
   };
 
   // Check if there are any clients
@@ -227,6 +242,7 @@ export default function CreateInvoice() {
     });
   };
 
+  // Always use corporate template
   const renderSelectedTemplate = () => {
     const templateProps = {
       invoiceData,
@@ -235,19 +251,7 @@ export default function CreateInvoice() {
       showNotes,
     };
 
-    switch (selectedTemplate) {
-      case InvoiceTemplateType.MODERN:
-        return <ModernTemplate {...templateProps} />;
-      case InvoiceTemplateType.MINIMAL:
-        return <MinimalTemplate {...templateProps} />;
-      case InvoiceTemplateType.PROFESSIONAL:
-        return <ProfessionalTemplate {...templateProps} />;
-      case InvoiceTemplateType.CORPORATE:
-        return <CorporateTemplate {...templateProps} />;
-      case InvoiceTemplateType.CLASSIC:
-      default:
-        return <ClassicTemplate {...templateProps} />;
-    }
+    return <CorporateTemplate {...templateProps} />;
   };
 
   const generatePDF = async () => {
@@ -260,11 +264,15 @@ export default function CreateInvoice() {
       tempDiv.style.left = "-9999px";
       tempDiv.style.background = "white";
       tempDiv.style.width = "800px";
+      tempDiv.style.margin = "0";
+      tempDiv.style.padding = "0";
 
       // Create a React root and render the selected template
       const templateContainer = document.createElement("div");
       templateContainer.style.width = "100%";
       templateContainer.style.background = "white";
+      templateContainer.style.margin = "0";
+      templateContainer.style.padding = "0";
 
       // Clone the invoice template content
       const clone = invoiceRef.current.cloneNode(true) as HTMLElement;
@@ -288,18 +296,9 @@ export default function CreateInvoice() {
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 30;
+      const imgY = 0;
 
-      // Add company logo if available
-      if (invoiceData.companyLogo) {
-        try {
-          // Add logo at the top of the PDF
-          pdf.addImage(invoiceData.companyLogo, "PNG", imgX, 10, 40, 20);
-        } catch (logoError) {
-          console.error("Error adding logo to PDF:", logoError);
-          // Continue without the logo if there's an error
-        }
-      }
+      // Logo functionality removed
 
       pdf.addImage(
         imgData,
@@ -331,16 +330,38 @@ export default function CreateInvoice() {
   };
 
   const saveInvoice = () => {
-    // In a real app, this would save to a database
-    alert("Invoice saved successfully!");
+    // If client name is entered but not selected from dropdown, save it as a new client
+    if (
+      invoiceData.client &&
+      !clients.some((c) => c.name === invoiceData.client)
+    ) {
+      const newClient = saveNewClient(invoiceData.client);
+      // If a new client was created, update the clients list
+      if (newClient) {
+        setClients((prevClients) => {
+          const updatedClients = [...prevClients, newClient];
+          return updatedClients;
+        });
+      }
+    }
+
     // For demo purposes, we'll save to localStorage
     const savedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-    savedInvoices.push({
-      ...invoiceData,
-      id: `INV-${Math.floor(Math.random() * 10000)}`,
+    const newInvoice = {
+      id: invoiceData.invoiceNumber,
+      client: invoiceData.client,
+      amount: `${currencySymbols[invoiceData.currency]}${invoiceData.total.toFixed(2)}`,
+      date: invoiceData.date,
+      dueDate: invoiceData.dueDate,
       status: "Pending",
-    });
+      total: invoiceData.total,
+    };
+    savedInvoices.push(newInvoice);
     localStorage.setItem("invoices", JSON.stringify(savedInvoices));
+
+    // Dispatch event to update dashboard
+    window.dispatchEvent(new CustomEvent("invoiceUpdated"));
+    alert("Invoice saved successfully!");
   };
 
   return (
@@ -373,19 +394,7 @@ export default function CreateInvoice() {
         </div>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Invoice Template
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <InvoiceTemplateSelector
-            selectedTemplate={selectedTemplate}
-            onSelectTemplate={setSelectedTemplate}
-          />
-        </CardContent>
-      </Card>
+      {/* Template selector removed */}
 
       <div className="hidden">
         <div ref={invoiceRef}>{renderSelectedTemplate()}</div>
@@ -441,42 +450,57 @@ export default function CreateInvoice() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="client">Client</Label>
-                <div className="flex gap-2">
-                  {hasClients ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
                     <div className="flex-1">
-                      <Select onValueChange={handleClientChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a client" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {clients.map((client) => (
-                            <SelectItem
-                              key={client.id}
-                              value={client.id.toString()}
-                            >
-                              {client.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {hasClients ? (
+                        <Select onValueChange={handleClientChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a client" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {clients.map((client) => (
+                              <SelectItem
+                                key={client.id}
+                                value={client.id.toString()}
+                              >
+                                {client.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="border rounded-md p-3 bg-gray-50 text-sm text-gray-600">
+                          No clients found. Please create a client first.
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="flex-1 border rounded-md p-3 bg-gray-50 text-sm text-gray-600">
-                      No clients found. Please create a client first.
-                    </div>
-                  )}
-                  <AddClientDialog
-                    onClientAdded={handleClientAdded}
-                    trigger={
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="shrink-0"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                      </Button>
-                    }
-                  />
+                    <AddClientDialog
+                      onClientAdded={handleClientAdded}
+                      trigger={
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                        >
+                          <UserPlus className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Or enter new client name"
+                      value={invoiceData.client}
+                      onChange={(e) =>
+                        setInvoiceData({
+                          ...invoiceData,
+                          client: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -502,27 +526,8 @@ export default function CreateInvoice() {
               </Label>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="companyLogo">Company Logo</Label>
-              <div className="flex items-center gap-4">
-                {invoiceData.companyLogo && (
-                  <div className="w-16 h-16 border rounded overflow-hidden">
-                    <img
-                      src={invoiceData.companyLogo}
-                      alt="Company Logo"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                )}
-                <Input
-                  id="companyLogo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                  disabled={useProfileInfo}
-                />
-              </div>
-            </div>
+            {/* Logo functionality removed */}
+
             <div className="space-y-2">
               <Label htmlFor="companyName">Company Name</Label>
               <Input
@@ -579,6 +584,103 @@ export default function CreateInvoice() {
                     })
                   }
                   disabled={useProfileInfo}
+                />
+              </div>
+            </div>
+
+            {/* Bank Account Details */}
+            <div className="space-y-4 pt-4 border-t mt-4">
+              <h3 className="text-lg font-medium">Bank Account Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="accountName">Account Holder Name</Label>
+                  <Input
+                    id="accountName"
+                    value={invoiceData.bankDetails?.accountName || ""}
+                    onChange={(e) =>
+                      setInvoiceData({
+                        ...invoiceData,
+                        bankDetails: {
+                          ...invoiceData.bankDetails,
+                          accountName: e.target.value,
+                        },
+                      })
+                    }
+                    disabled={useProfileInfo}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="accountNumber">Account Number</Label>
+                  <Input
+                    id="accountNumber"
+                    value={invoiceData.bankDetails?.accountNumber || ""}
+                    onChange={(e) =>
+                      setInvoiceData({
+                        ...invoiceData,
+                        bankDetails: {
+                          ...invoiceData.bankDetails,
+                          accountNumber: e.target.value,
+                        },
+                      })
+                    }
+                    disabled={useProfileInfo}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bankName">Bank Name</Label>
+                  <Input
+                    id="bankName"
+                    value={invoiceData.bankDetails?.bankName || ""}
+                    onChange={(e) =>
+                      setInvoiceData({
+                        ...invoiceData,
+                        bankDetails: {
+                          ...invoiceData.bankDetails,
+                          bankName: e.target.value,
+                        },
+                      })
+                    }
+                    disabled={useProfileInfo}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ifscCode">IFSC Code</Label>
+                  <Input
+                    id="ifscCode"
+                    value={invoiceData.bankDetails?.ifscCode || ""}
+                    onChange={(e) =>
+                      setInvoiceData({
+                        ...invoiceData,
+                        bankDetails: {
+                          ...invoiceData.bankDetails,
+                          ifscCode: e.target.value,
+                        },
+                      })
+                    }
+                    disabled={useProfileInfo}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="upiId">UPI ID</Label>
+                <Input
+                  id="upiId"
+                  value={invoiceData.bankDetails?.upiId || ""}
+                  onChange={(e) =>
+                    setInvoiceData({
+                      ...invoiceData,
+                      bankDetails: {
+                        ...invoiceData.bankDetails,
+                        upiId: e.target.value,
+                      },
+                    })
+                  }
+                  disabled={useProfileInfo}
+                  placeholder="example@upi"
                 />
               </div>
             </div>

@@ -6,12 +6,15 @@ export default function ProfessionalTemplate({
   showNotes = false,
 }: InvoiceTemplateProps) {
   return (
-    <div className="p-8 bg-white">
+    <div className="bg-white">
       {/* Header with accent color */}
+      <h2 className="text-3xl font-bold text-gray-700 mb-6 text-center">
+        INVOICE
+      </h2>
       <div className="border-b-4 border-blue-600 pb-6 mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">
               {invoiceData.companyName}
             </h1>
             <p className="text-gray-600 whitespace-pre-line">
@@ -21,9 +24,6 @@ export default function ProfessionalTemplate({
             <p className="text-gray-600">{invoiceData.companyPhone}</p>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-bold text-blue-600 mb-2 text-center">
-              INVOICE
-            </h2>
             <div className="bg-gray-100 p-4 rounded-md">
               <p className="text-gray-700">
                 <span className="font-semibold">Invoice #:</span>{" "}
@@ -37,15 +37,6 @@ export default function ProfessionalTemplate({
                 {invoiceData.dueDate}
               </p>
             </div>
-            {invoiceData.companyLogo && (
-              <div className="mt-4 flex justify-end">
-                <img
-                  src={invoiceData.companyLogo}
-                  alt="Company Logo"
-                  className="h-16"
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -54,6 +45,22 @@ export default function ProfessionalTemplate({
       <div className="mb-8 p-5 bg-gray-50 rounded-md border-l-4 border-blue-600">
         <h3 className="text-lg font-semibold mb-2 text-gray-800">Bill To:</h3>
         <p className="text-gray-800 font-medium">{invoiceData.client}</p>
+        {invoiceData.clientAddress && (
+          <p className="text-gray-600 text-sm mt-1">
+            {invoiceData.clientAddress}
+          </p>
+        )}
+        {invoiceData.clientEmail && (
+          <p className="text-gray-600 text-sm">{invoiceData.clientEmail}</p>
+        )}
+        {invoiceData.clientPhone && (
+          <p className="text-gray-600 text-sm">{invoiceData.clientPhone}</p>
+        )}
+        {invoiceData.clientGstNumber && (
+          <p className="text-gray-600 text-sm mt-1">
+            GST: {invoiceData.clientGstNumber}
+          </p>
+        )}
       </div>
 
       {/* Items Table */}
@@ -94,8 +101,8 @@ export default function ProfessionalTemplate({
       </div>
 
       {/* Totals */}
-      <div className="flex justify-end mb-8">
-        <div className="w-64 bg-gray-50 p-4 rounded-md border border-gray-200">
+      <div className="mb-8">
+        <div className="w-full bg-gray-50 p-4 rounded-md border border-gray-200">
           <div className="flex justify-between py-2">
             <span className="font-medium text-gray-700">Subtotal:</span>
             <span className="text-gray-800">
@@ -105,7 +112,7 @@ export default function ProfessionalTemplate({
           </div>
           <div className="flex justify-between py-2">
             <span className="font-medium text-gray-700">
-              Tax ({invoiceData.taxRate}%):
+              {invoiceData.taxType} ({invoiceData.taxRate}%):
             </span>
             <span className="text-gray-800">
               {currencySymbols[invoiceData.currency]}

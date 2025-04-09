@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   AreaChart,
@@ -9,6 +9,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface RevenueChartProps {
   data?: {
@@ -18,7 +25,22 @@ interface RevenueChartProps {
   }[];
   title?: string;
   subtitle?: string;
+  onDataUpdate?: (data: any[]) => void;
 }
+
+type Currency = {
+  symbol: string;
+  code: string;
+  name: string;
+  rate: number; // Exchange rate relative to INR (1 INR = rate of other currency)
+};
+
+const currencies: Currency[] = [
+  { symbol: "₹", code: "INR", name: "Indian Rupee", rate: 1 },
+  { symbol: "$", code: "USD", name: "US Dollar", rate: 0.012 },
+  { symbol: "€", code: "EUR", name: "Euro", rate: 0.011 },
+  { symbol: "£", code: "GBP", name: "British Pound", rate: 0.0095 },
+];
 
 const RevenueChart = ({
   data = [
@@ -37,20 +59,65 @@ const RevenueChart = ({
   ],
   title = "Revenue Overview",
   subtitle = "Monthly revenue and expenses for the current year",
+  onDataUpdate,
 }: RevenueChartProps) => {
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
+    currencies[0],
+  ); // Default to INR
+  const [convertedData, setConvertedData] = useState(data);
+
+  // Convert data based on selected currency
+  useEffect(() => {
+    const newData = data.map((item) => ({
+      ...item,
+      revenue: Number((item.revenue * selectedCurrency.rate).toFixed(2)),
+      expenses: Number((item.expenses * selectedCurrency.rate).toFixed(2)),
+    }));
+    setConvertedData(newData);
+
+    // If onDataUpdate callback exists, call it with the new data
+    if (onDataUpdate) {
+      onDataUpdate(newData);
+    }
+  }, [data, selectedCurrency, onDataUpdate]);
+
+  const handleCurrencyChange = (value: string) => {
+    const currency = currencies.find((c) => c.code === value) || currencies[0];
+    setSelectedCurrency(currency);
+  };
+
   return (
     <Card className="w-full h-full bg-white shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold text-gray-800">
-          {title}
-        </CardTitle>
-        <p className="text-sm text-gray-500">{subtitle}</p>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-xl font-semibold text-gray-800">
+            {title}
+          </CardTitle>
+          <p className="text-sm text-gray-500">{subtitle}</p>
+        </div>
+        <div className="w-40">
+          <Select
+            value={selectedCurrency.code}
+            onValueChange={handleCurrencyChange}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((currency) => (
+                <SelectItem key={currency.code} value={currency.code}>
+                  {currency.symbol} {currency.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={data}
+              data={convertedData}
               margin={{
                 top: 5,
                 right: 30,
@@ -71,10 +138,13 @@ const RevenueChart = ({
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `${selectedCurrency.symbol}${value}`}
               />
               <Tooltip
-                formatter={(value) => [`$${value}`, undefined]}
+                formatter={(value) => [
+                  `${selectedCurrency.symbol}${value}`,
+                  undefined,
+                ]}
                 contentStyle={{
                   backgroundColor: "#fff",
                   border: "1px solid #e2e8f0",

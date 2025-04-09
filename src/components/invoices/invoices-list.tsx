@@ -33,8 +33,8 @@ export default function InvoicesList() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
-  // Load invoices from localStorage on component mount
-  useEffect(() => {
+  // Load invoices from localStorage on component mount and when invoices are updated
+  const loadInvoices = () => {
     const savedInvoices = localStorage.getItem("invoices");
     if (savedInvoices) {
       try {
@@ -43,6 +43,21 @@ export default function InvoicesList() {
         console.error("Error parsing invoices from localStorage", e);
       }
     }
+  };
+
+  useEffect(() => {
+    loadInvoices();
+
+    // Listen for invoice updates
+    const handleInvoiceUpdate = () => {
+      loadInvoices();
+    };
+
+    window.addEventListener("invoiceUpdated", handleInvoiceUpdate);
+
+    return () => {
+      window.removeEventListener("invoiceUpdated", handleInvoiceUpdate);
+    };
   }, []);
 
   const handleCreateInvoice = () => {
@@ -105,15 +120,18 @@ export default function InvoicesList() {
     );
     setInvoices(updatedInvoices);
     localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
+
+    // Dispatch a custom event to notify dashboard components
+    window.dispatchEvent(new CustomEvent("invoiceUpdated"));
   };
 
   const getStatusStyles = (status: string) => {
-    switch (status) {
-      case "Paid":
+    switch (status.toLowerCase()) {
+      case "paid":
         return "bg-green-100 text-green-800";
-      case "Pending":
+      case "pending":
         return "bg-amber-100 text-amber-800";
-      case "Overdue":
+      case "overdue":
         return "bg-red-100 text-red-800";
       default:
         return "bg-slate-100 text-slate-800";
@@ -213,7 +231,7 @@ export default function InvoicesList() {
                       >
                         <Send className="h-4 w-4" />
                       </Button>
-                      {invoice.status !== "Paid" && (
+                      {invoice.status.toLowerCase() !== "paid" && (
                         <Button
                           variant="ghost"
                           size="icon"

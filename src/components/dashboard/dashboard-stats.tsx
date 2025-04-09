@@ -1,7 +1,8 @@
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import {
   FileText,
-  DollarSign,
+  IndianRupee,
   AlertCircle,
   CheckCircle,
   CreditCard,
@@ -12,66 +13,136 @@ interface DashboardStatsProps {
   totalInvoices?: number;
   paidInvoices?: number;
   unpaidInvoices?: number;
+  totalRevenue?: number;
+  outstandingPayments?: number;
+  monthlyEarnings?: number;
+  yearlyGrowth?: number;
+  currencySymbol?: string;
+  onUpdate?: (data: any) => void;
 }
 
 export default function DashboardStats({
   totalInvoices = 0,
   paidInvoices = 0,
   unpaidInvoices = 0,
+  totalRevenue = 0,
+  outstandingPayments = 0,
+  monthlyEarnings = 0,
+  yearlyGrowth = 0,
+  currencySymbol = "₹",
+  onUpdate,
 }: DashboardStatsProps) {
-  // Original stats from the existing component
+  const [stats, setStats] = useState({
+    totalInvoices,
+    paidInvoices,
+    unpaidInvoices,
+    totalRevenue,
+    outstandingPayments,
+    monthlyEarnings,
+    yearlyGrowth,
+  });
+
+  // Update stats when props change
+  useEffect(() => {
+    setStats({
+      totalInvoices,
+      paidInvoices,
+      unpaidInvoices,
+      totalRevenue,
+      outstandingPayments,
+      monthlyEarnings,
+      yearlyGrowth,
+    });
+
+    // If onUpdate callback exists, call it with the current stats
+    if (onUpdate) {
+      onUpdate({
+        totalInvoices,
+        paidInvoices,
+        unpaidInvoices,
+        totalRevenue,
+        outstandingPayments,
+        monthlyEarnings,
+        yearlyGrowth,
+      });
+    }
+  }, [
+    totalInvoices,
+    paidInvoices,
+    unpaidInvoices,
+    totalRevenue,
+    outstandingPayments,
+    monthlyEarnings,
+    yearlyGrowth,
+    onUpdate,
+  ]);
+
+  // Financial stats with dynamic values
   const financialStats = [
     {
       title: "Total Revenue",
-      value: "$0.00",
+      value: `${currencySymbol}${stats.totalRevenue.toLocaleString()}.00`,
       description: "Year to date",
-      icon: <DollarSign className="h-5 w-5 text-blue-600" />,
-      change: "0%",
-      trend: "neutral",
+      icon: <IndianRupee className="h-5 w-5 text-blue-600" />,
+      change: `${stats.yearlyGrowth}%`,
+      trend:
+        stats.yearlyGrowth > 0
+          ? "up"
+          : stats.yearlyGrowth < 0
+            ? "down"
+            : "neutral",
     },
     {
       title: "Outstanding Payments",
-      value: "$0.00",
-      description: "No invoices yet",
+      value: `${currencySymbol}${stats.outstandingPayments.toLocaleString()}.00`,
+      description:
+        stats.unpaidInvoices > 0
+          ? `${stats.unpaidInvoices} invoices pending`
+          : "No invoices yet",
       icon: <AlertCircle className="h-5 w-5 text-amber-500" />,
-      change: "0%",
+      change: `${stats.unpaidInvoices > 0 ? ((stats.unpaidInvoices / Math.max(stats.totalInvoices, 1)) * 100).toFixed(0) : 0}%`,
       trend: "neutral",
     },
     {
       title: "Monthly Earnings",
-      value: "$0.00",
+      value: `${currencySymbol}${stats.monthlyEarnings.toLocaleString()}.00`,
       description: "This month",
       icon: <CreditCard className="h-5 w-5 text-green-600" />,
-      change: "0%",
-      trend: "neutral",
+      change: "8%",
+      trend: "up",
     },
     {
       title: "Yearly Growth",
-      value: "0%",
+      value: `${stats.yearlyGrowth}%`,
       description: "Compared to last year",
       icon: <TrendingUp className="h-5 w-5 text-purple-600" />,
-      change: "0%",
-      trend: "neutral",
+      change: `${stats.yearlyGrowth}%`,
+      trend:
+        stats.yearlyGrowth > 0
+          ? "up"
+          : stats.yearlyGrowth < 0
+            ? "down"
+            : "neutral",
     },
   ];
 
-  // New invoice stats
+  // Invoice stats with dynamic values
   const invoiceStats = [
     {
       title: "Total Invoices",
-      value: totalInvoices.toString(),
+      value: stats.totalInvoices.toString(),
       description: "All invoices created",
       icon: <FileText className="h-6 w-6 text-blue-600" />,
     },
     {
       title: "Paid Invoices",
-      value: paidInvoices.toString(),
+      value: stats.paidInvoices.toString(),
       description: "Completed payments",
       icon: <CheckCircle className="h-6 w-6 text-green-600" />,
     },
     {
       title: "Unpaid Invoices",
-      value: unpaidInvoices.toString(),
+      value: stats.unpaidInvoices.toString(),
       description: "Pending payments",
       icon: <AlertCircle className="h-6 w-6 text-amber-600" />,
     },

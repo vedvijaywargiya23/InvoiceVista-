@@ -6,18 +6,14 @@ export default function ClassicTemplate({
   showNotes = false,
 }: InvoiceTemplateProps) {
   return (
-    <div className="p-8 bg-white">
+    <div className="bg-white">
       {/* Header */}
+      <h2 className="text-3xl font-bold text-gray-700 mb-8 text-center">
+        INVOICE
+      </h2>
       <div className="flex justify-between items-start mb-8">
         <div>
-          {invoiceData.companyLogo && (
-            <img
-              src={invoiceData.companyLogo}
-              alt="Company Logo"
-              className="h-16 mb-4"
-            />
-          )}
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
             {invoiceData.companyName}
           </h1>
           <p className="text-gray-600 whitespace-pre-line">
@@ -27,9 +23,6 @@ export default function ClassicTemplate({
           <p className="text-gray-600">{invoiceData.companyPhone}</p>
         </div>
         <div className="text-right">
-          <h2 className="text-3xl font-bold text-blue-600 mb-2 text-center">
-            INVOICE
-          </h2>
           <p className="text-gray-600">
             <span className="font-semibold">Invoice #:</span>{" "}
             {invoiceData.invoiceNumber}
@@ -48,6 +41,22 @@ export default function ClassicTemplate({
       <div className="mb-8 p-4 bg-gray-50 rounded-md">
         <h3 className="text-lg font-semibold mb-2">Bill To:</h3>
         <p className="text-gray-800 font-medium">{invoiceData.client}</p>
+        {invoiceData.clientAddress && (
+          <p className="text-gray-600 text-sm mt-1">
+            {invoiceData.clientAddress}
+          </p>
+        )}
+        {invoiceData.clientEmail && (
+          <p className="text-gray-600 text-sm">{invoiceData.clientEmail}</p>
+        )}
+        {invoiceData.clientPhone && (
+          <p className="text-gray-600 text-sm">{invoiceData.clientPhone}</p>
+        )}
+        {invoiceData.clientGstNumber && (
+          <p className="text-gray-600 text-sm mt-1">
+            GST: {invoiceData.clientGstNumber}
+          </p>
+        )}
       </div>
 
       {/* Items Table */}
@@ -79,8 +88,8 @@ export default function ClassicTemplate({
       </table>
 
       {/* Totals */}
-      <div className="flex justify-end mb-8">
-        <div className="w-64">
+      <div className="mb-8">
+        <div className="w-full">
           <div className="flex justify-between py-2">
             <span className="font-medium">Subtotal:</span>
             <span>
@@ -89,7 +98,9 @@ export default function ClassicTemplate({
             </span>
           </div>
           <div className="flex justify-between py-2">
-            <span className="font-medium">Tax ({invoiceData.taxRate}%):</span>
+            <span className="font-medium">
+              {invoiceData.taxType} ({invoiceData.taxRate}%):
+            </span>
             <span>
               {currencySymbols[invoiceData.currency]}
               {invoiceData.taxAmount.toFixed(2)}

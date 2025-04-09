@@ -1,23 +1,62 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ArrowUpCircle,
   ArrowDownCircle,
-  DollarSign,
   Calendar,
+  IndianRupee,
 } from "lucide-react";
 
 interface FinancialSummaryProps {
   totalRevenue?: number;
   outstandingPayments?: number;
   monthlyEarnings?: number;
+  pendingInvoices?: number;
+  currencySymbol?: string;
+  onUpdate?: (data: any) => void;
 }
 
 const FinancialSummary: React.FC<FinancialSummaryProps> = ({
   totalRevenue = 24500,
   outstandingPayments = 4320,
   monthlyEarnings = 8750,
+  pendingInvoices = 5,
+  currencySymbol = "₹",
+  onUpdate,
 }) => {
+  const [stats, setStats] = useState({
+    totalRevenue,
+    outstandingPayments,
+    monthlyEarnings,
+    pendingInvoices,
+  });
+
+  // Update stats when props change
+  useEffect(() => {
+    setStats({
+      totalRevenue,
+      outstandingPayments,
+      monthlyEarnings,
+      pendingInvoices,
+    });
+
+    // If onUpdate callback exists, call it with the current stats
+    if (onUpdate) {
+      onUpdate({
+        totalRevenue,
+        outstandingPayments,
+        monthlyEarnings,
+        pendingInvoices,
+      });
+    }
+  }, [
+    totalRevenue,
+    outstandingPayments,
+    monthlyEarnings,
+    pendingInvoices,
+    onUpdate,
+  ]);
+
   return (
     <div className="w-full bg-white p-4 rounded-lg">
       <h2 className="text-xl font-semibold mb-4 text-gray-800">
@@ -30,11 +69,12 @@ const FinancialSummary: React.FC<FinancialSummaryProps> = ({
             <CardTitle className="text-sm font-medium text-gray-600">
               Total Revenue
             </CardTitle>
-            <DollarSign className="h-5 w-5 text-blue-500" />
+            <IndianRupee className="h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              ${totalRevenue.toLocaleString()}
+              {currencySymbol}
+              {stats.totalRevenue.toLocaleString()}
             </div>
             <p className="text-xs text-green-600 flex items-center mt-1">
               <ArrowUpCircle className="h-3 w-3 mr-1" /> 12% from last month
@@ -52,10 +92,12 @@ const FinancialSummary: React.FC<FinancialSummaryProps> = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              ${outstandingPayments.toLocaleString()}
+              {currencySymbol}
+              {stats.outstandingPayments.toLocaleString()}
             </div>
             <p className="text-xs text-amber-600 flex items-center mt-1">
-              <ArrowDownCircle className="h-3 w-3 mr-1" /> 5 invoices pending
+              <ArrowDownCircle className="h-3 w-3 mr-1" />{" "}
+              {stats.pendingInvoices} invoices pending
             </p>
           </CardContent>
         </Card>
@@ -70,7 +112,8 @@ const FinancialSummary: React.FC<FinancialSummaryProps> = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              ${monthlyEarnings.toLocaleString()}
+              {currencySymbol}
+              {stats.monthlyEarnings.toLocaleString()}
             </div>
             <p className="text-xs text-green-600 flex items-center mt-1">
               <ArrowUpCircle className="h-3 w-3 mr-1" /> 8% from previous month

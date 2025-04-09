@@ -49,19 +49,41 @@ export default function ClientsList() {
 
   // Load clients from localStorage on component mount
   useEffect(() => {
-    const savedClients = localStorage.getItem("clients");
-    if (savedClients) {
-      try {
-        setClients(JSON.parse(savedClients));
-      } catch (e) {
-        console.error("Error parsing clients from localStorage", e);
+    const loadClients = () => {
+      const savedClients = localStorage.getItem("clients");
+      if (savedClients) {
+        try {
+          setClients(JSON.parse(savedClients));
+        } catch (e) {
+          console.error("Error parsing clients from localStorage", e);
+        }
       }
-    }
+    };
+
+    // Load clients initially
+    loadClients();
+
+    // Set up event listener for invoice updates which might add new clients
+    const handleInvoiceUpdate = () => {
+      loadClients();
+    };
+
+    window.addEventListener("invoiceUpdated", handleInvoiceUpdate);
+    window.addEventListener("clientsUpdated", loadClients);
+
+    // Clean up event listener
+    return () => {
+      window.removeEventListener("invoiceUpdated", handleInvoiceUpdate);
+      window.removeEventListener("clientsUpdated", loadClients);
+    };
   }, []);
 
   // Save clients to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("clients", JSON.stringify(clients));
+    if (clients.length > 0) {
+      localStorage.setItem("clients", JSON.stringify(clients));
+      window.dispatchEvent(new CustomEvent("clientsUpdated"));
+    }
   }, [clients]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,11 +92,35 @@ export default function ClientsList() {
   };
 
   const handleAddClient = () => {
+    // Validate client name is not empty
+    if (!currentClient.name.trim()) {
+      alert("Client name cannot be empty");
+      return;
+    }
+
+    // Get the latest clients from localStorage first
+    const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+
+    // Check if client already exists
+    const existingClient = savedClients.find(
+      (c) => c.name.toLowerCase() === currentClient.name.toLowerCase(),
+    );
+
+    if (existingClient) {
+      alert("A client with this name already exists");
+      return;
+    }
+
     const newClient = {
       ...currentClient,
       id: Date.now(),
     };
-    setClients([...clients, newClient]);
+
+    const updatedClients = [...savedClients, newClient];
+    setClients(updatedClients);
+    localStorage.setItem("clients", JSON.stringify(updatedClients));
+    window.dispatchEvent(new CustomEvent("clientsUpdated"));
+
     setCurrentClient({
       id: 0,
       name: "",
@@ -88,17 +134,29 @@ export default function ClientsList() {
   };
 
   const handleEditClient = () => {
-    setClients(
-      clients.map((client) =>
-        client.id === currentClient.id ? currentClient : client,
-      ),
+    // Get the latest clients from localStorage first
+    const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+
+    const updatedClients = savedClients.map((client) =>
+      client.id === currentClient.id ? currentClient : client,
     );
+
+    setClients(updatedClients);
+    localStorage.setItem("clients", JSON.stringify(updatedClients));
+    window.dispatchEvent(new CustomEvent("clientsUpdated"));
+
     setIsEditClientOpen(false);
   };
 
   const handleDeleteClient = (id: number) => {
     if (window.confirm("Are you sure you want to delete this client?")) {
-      setClients(clients.filter((client) => client.id !== id));
+      // Get the latest clients from localStorage first
+      const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
+
+      const updatedClients = savedClients.filter((client) => client.id !== id);
+      setClients(updatedClients);
+      localStorage.setItem("clients", JSON.stringify(updatedClients));
+      window.dispatchEvent(new CustomEvent("clientsUpdated"));
     }
   };
 

@@ -57,7 +57,7 @@ const Navbar = ({
               strokeLinejoin="round"
             />
           </svg>
-          <span className="ml-2 text-xl font-bold text-gray-900">
+          <span className="ml-2 text-xl font-bold text-blue-600">
             InvoiceVista
           </span>
         </Link>

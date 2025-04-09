@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ interface Invoice {
   client: string;
   amount: number;
   date: string;
-  status: "paid" | "pending" | "overdue";
+  status: string;
 }
 
 interface RecentInvoicesProps {
@@ -26,6 +26,72 @@ const RecentInvoices = ({
   invoices = [],
   title = "Recent Invoices",
 }: RecentInvoicesProps) => {
+  const [displayInvoices, setDisplayInvoices] = useState<Invoice[]>(invoices);
+
+  // Update display invoices when props change or when invoices are updated
+  useEffect(() => {
+    if (invoices && invoices.length > 0) {
+      setDisplayInvoices(invoices);
+    } else {
+      // If no invoices are provided via props, load from localStorage
+      try {
+        const savedInvoices = JSON.parse(
+          localStorage.getItem("invoices") || "[]",
+        );
+        if (savedInvoices.length > 0) {
+          const formattedInvoices = savedInvoices
+            .slice(0, 5)
+            .map((invoice: any) => ({
+              id: invoice.id,
+              client: invoice.client,
+              amount: parseFloat(
+                invoice.amount?.replace(/[^0-9.]/g, "") || "0",
+              ),
+              date: invoice.date,
+              status: invoice.status.toLowerCase(),
+            }));
+          setDisplayInvoices(formattedInvoices);
+        }
+      } catch (error) {
+        console.error("Error loading invoices:", error);
+      }
+    }
+  }, [invoices]);
+
+  // Listen for invoice updates
+  useEffect(() => {
+    const handleInvoiceUpdate = () => {
+      if (invoices.length === 0) {
+        // Only update if not using prop-provided invoices
+        try {
+          const savedInvoices = JSON.parse(
+            localStorage.getItem("invoices") || "[]",
+          );
+          if (savedInvoices.length > 0) {
+            const formattedInvoices = savedInvoices
+              .slice(0, 5)
+              .map((invoice: any) => ({
+                id: invoice.id,
+                client: invoice.client,
+                amount: parseFloat(
+                  invoice.amount?.replace(/[^0-9.]/g, "") || "0",
+                ),
+                date: invoice.date,
+                status: invoice.status.toLowerCase(),
+              }));
+            setDisplayInvoices(formattedInvoices);
+          }
+        } catch (error) {
+          console.error("Error updating invoices:", error);
+        }
+      }
+    };
+
+    window.addEventListener("invoiceUpdated", handleInvoiceUpdate);
+    return () =>
+      window.removeEventListener("invoiceUpdated", handleInvoiceUpdate);
+  }, [invoices]);
+
   // Function to format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -45,8 +111,8 @@ const RecentInvoices = ({
   };
 
   // Function to get badge variant based on status
-  const getStatusBadgeVariant = (status: Invoice["status"]) => {
-    switch (status) {
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status.toLowerCase()) {
       case "paid":
         return "secondary";
       case "pending":
@@ -61,7 +127,7 @@ const RecentInvoices = ({
   return (
     <div className="w-full h-full bg-white rounded-lg shadow-sm p-4 overflow-hidden">
       <h3 className="text-lg font-medium mb-4 text-gray-800">{title}</h3>
-      {invoices.length === 0 ? (
+      {displayInvoices.length === 0 ? (
         <div className="py-6 text-center text-gray-500">
           <p>No recent invoices found</p>
           <p className="text-sm mt-2">
@@ -81,7 +147,7 @@ const RecentInvoices = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
+              {displayInvoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium">{invoice.id}</TableCell>
                   <TableCell>{invoice.client}</TableCell>

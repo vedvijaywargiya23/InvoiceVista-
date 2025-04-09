@@ -6,7 +6,7 @@ export default function MinimalTemplate({
   showNotes = false,
 }: InvoiceTemplateProps) {
   return (
-    <div className="p-8 bg-white">
+    <div className="bg-white">
       {/* Simple Header */}
       <div className="flex justify-between items-start mb-12">
         <div>
@@ -20,6 +20,15 @@ export default function MinimalTemplate({
           <p className="text-gray-500 text-sm">{invoiceData.companyPhone}</p>
         </div>
         <div className="text-right">
+          {invoiceData.companyLogo && (
+            <div className="flex justify-end mb-2">
+              <img
+                src={invoiceData.companyLogo}
+                alt="Company Logo"
+                className="h-8 w-auto mr-4"
+              />
+            </div>
+          )}
           <h2 className="text-2xl font-light tracking-wide text-gray-800 text-center">
             INVOICE
           </h2>
@@ -35,6 +44,20 @@ export default function MinimalTemplate({
       <div className="mb-12">
         <p className="text-sm text-gray-500 mb-1">BILLED TO</p>
         <p className="text-gray-800">{invoiceData.client}</p>
+        {invoiceData.clientAddress && (
+          <p className="text-gray-600 text-sm">{invoiceData.clientAddress}</p>
+        )}
+        {invoiceData.clientEmail && (
+          <p className="text-gray-600 text-sm">{invoiceData.clientEmail}</p>
+        )}
+        {invoiceData.clientPhone && (
+          <p className="text-gray-600 text-sm">{invoiceData.clientPhone}</p>
+        )}
+        {invoiceData.clientGstNumber && (
+          <p className="text-gray-600 text-sm">
+            GST: {invoiceData.clientGstNumber}
+          </p>
+        )}
       </div>
 
       {/* Items Table - Minimal */}
@@ -86,7 +109,9 @@ export default function MinimalTemplate({
             </span>
           </div>
           <div className="flex justify-between py-2">
-            <span className="text-gray-500">Tax ({invoiceData.taxRate}%)</span>
+            <span className="text-gray-500">
+              {invoiceData.taxType} ({invoiceData.taxRate}%)
+            </span>
             <span className="text-gray-800">
               {currencySymbols[invoiceData.currency]}
               {invoiceData.taxAmount.toFixed(2)}
@@ -104,7 +129,8 @@ export default function MinimalTemplate({
 
       {/* Notes - Only show if enabled */}
       {showNotes && invoiceData.notes && (
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-gray-500 border-t border-gray-200 pt-4 mt-4">
+          <h3 className="font-medium mb-2">Notes:</h3>
           <p>{invoiceData.notes}</p>
         </div>
       )}

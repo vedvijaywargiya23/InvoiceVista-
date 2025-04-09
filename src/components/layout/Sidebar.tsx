@@ -52,7 +52,6 @@ const Sidebar = ({ className = "" }: SidebarProps) => {
     { to: "/clients", icon: <Users size={20} />, label: "Clients" },
     { to: "/invoices", icon: <FileText size={20} />, label: "Invoices" },
     { to: "/profile", icon: <UserCircle size={20} />, label: "Profile" },
-    { to: "/settings", icon: <Settings size={20} />, label: "Settings" },
   ];
 
   return (
@@ -64,7 +63,7 @@ const Sidebar = ({ className = "" }: SidebarProps) => {
     >
       <div className="flex-1">
         <div className="mb-8 px-4">
-          <h2 className="text-xl font-bold text-primary">InvoiceVista</h2>
+          <h2 className="text-xl font-bold text-blue-600">InvoiceVista</h2>
           <p className="text-xs text-muted-foreground">
             Professional Invoicing
           </p>

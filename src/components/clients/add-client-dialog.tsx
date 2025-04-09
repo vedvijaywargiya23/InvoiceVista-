@@ -20,6 +20,7 @@ interface Client {
   email: string;
   phone?: string;
   address: string;
+  gstNumber?: string;
 }
 
 interface AddClientDialogProps {
@@ -37,6 +38,7 @@ export default function AddClientDialog({
     email: "",
     phone: "",
     address: "",
+    gstNumber: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -93,6 +95,7 @@ export default function AddClientDialog({
       email: clientData.email,
       phone: clientData.phone,
       address: clientData.address,
+      gstNumber: clientData.gstNumber,
     };
 
     // Get existing clients from localStorage or initialize empty array
@@ -113,6 +116,7 @@ export default function AddClientDialog({
       email: "",
       phone: "",
       address: "",
+      gstNumber: "",
     });
     setOpen(false);
   };
@@ -208,6 +212,21 @@ export default function AddClientDialog({
             {errors.address && (
               <p className="text-red-500 text-xs mt-1">{errors.address}</p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="gstNumber"
+              className="text-gray-700 flex items-center gap-2"
+            >
+              <Building2 className="h-4 w-4" /> GST Number (Optional)
+            </Label>
+            <Input
+              id="gstNumber"
+              name="gstNumber"
+              value={clientData.gstNumber}
+              onChange={handleChange}
+            />
           </div>
 
           <DialogFooter className="mt-6">

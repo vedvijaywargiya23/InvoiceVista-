@@ -7,7 +7,6 @@ import {
   PlusCircle,
   Users,
   FileText,
-  Settings,
   BarChart,
   UserCircle,
   Menu,
@@ -26,6 +25,88 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dashboardData, setDashboardData] = useState({
+    totalInvoices: 0,
+    paidInvoices: 0,
+    unpaidInvoices: 0,
+    totalRevenue: 0,
+    outstandingPayments: 0,
+    monthlyEarnings: 0,
+    yearlyGrowth: 0,
+    recentInvoices: [],
+  });
+
+  // Function to calculate dashboard data from invoices
+  const calculateDashboardData = () => {
+    try {
+      const savedInvoices = JSON.parse(
+        localStorage.getItem("invoices") || "[]",
+      );
+
+      // Calculate basic stats
+      const totalInvoices = savedInvoices.length;
+      const paidInvoices = savedInvoices.filter(
+        (inv) => inv.status === "Paid" || inv.status === "paid",
+      ).length;
+      const unpaidInvoices = totalInvoices - paidInvoices;
+
+      // Calculate financial stats
+      let totalRevenue = 0;
+      let outstandingPayments = 0;
+      let monthlyEarnings = 0;
+
+      // Current month and year
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+
+      savedInvoices.forEach((invoice) => {
+        // Extract numeric amount from string (remove currency symbol)
+        const amountStr = invoice.amount || "0";
+        const numericAmount = parseFloat(amountStr.replace(/[^0-9.]/g, ""));
+
+        if (invoice.status === "Paid" || invoice.status === "paid") {
+          totalRevenue += numericAmount;
+
+          // Check if invoice was paid in current month
+          const invoiceDate = new Date(invoice.date);
+          if (
+            invoiceDate.getMonth() === currentMonth &&
+            invoiceDate.getFullYear() === currentYear
+          ) {
+            monthlyEarnings += numericAmount;
+          }
+        } else {
+          outstandingPayments += numericAmount;
+        }
+      });
+
+      // Calculate yearly growth (mock value for demo)
+      const yearlyGrowth = totalInvoices > 0 ? 12 : 0;
+
+      // Format recent invoices for the component
+      const recentInvoices = savedInvoices.slice(0, 5).map((invoice) => ({
+        id: invoice.id,
+        client: invoice.client,
+        amount: parseFloat(invoice.amount?.replace(/[^0-9.]/g, "") || "0"),
+        date: invoice.date,
+        status: invoice.status,
+      }));
+
+      setDashboardData({
+        totalInvoices,
+        paidInvoices,
+        unpaidInvoices,
+        totalRevenue,
+        outstandingPayments,
+        monthlyEarnings,
+        yearlyGrowth,
+        recentInvoices,
+      });
+    } catch (error) {
+      console.error("Error calculating dashboard data:", error);
+    }
+  };
 
   // Check if we need to navigate to a specific tab based on location state
   useEffect(() => {
@@ -41,6 +122,32 @@ export default function Dashboard() {
       navigate("/login");
     }
   }, [navigate]);
+
+  // Calculate dashboard data on mount and when invoices change
+  useEffect(() => {
+    calculateDashboardData();
+
+    // Listen for invoice updates
+    const handleInvoiceUpdate = () => {
+      calculateDashboardData();
+    };
+
+    window.addEventListener("invoiceUpdated", handleInvoiceUpdate);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "invoices") {
+        calculateDashboardData();
+      }
+    });
+
+    // Set up interval to periodically check for changes
+    const intervalId = setInterval(calculateDashboardData, 2000);
+
+    return () => {
+      window.removeEventListener("invoiceUpdated", handleInvoiceUpdate);
+      window.removeEventListener("storage", handleInvoiceUpdate);
+      clearInterval(intervalId);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -149,17 +256,6 @@ export default function Dashboard() {
               Create Invoice
             </Button>
             <Button
-              variant={activeTab === "settings" ? "default" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => {
-                setActiveTab("settings");
-                setSidebarOpen(false);
-              }}
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Button>
-            <Button
               variant={activeTab === "profile" ? "default" : "ghost"}
               className="w-full justify-start"
               onClick={() => {
@@ -178,11 +274,20 @@ export default function Dashboard() {
           {activeTab === "overview" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold">Dashboard</h2>
-              <DashboardStats />
+              <DashboardStats
+                totalInvoices={dashboardData.totalInvoices}
+                paidInvoices={dashboardData.paidInvoices}
+                unpaidInvoices={dashboardData.unpaidInvoices}
+                totalRevenue={dashboardData.totalRevenue}
+                outstandingPayments={dashboardData.outstandingPayments}
+                monthlyEarnings={dashboardData.monthlyEarnings}
+                yearlyGrowth={dashboardData.yearlyGrowth}
+                currencySymbol="₹"
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <RevenueChart />
-                <RecentInvoices />
+                <RecentInvoices invoices={dashboardData.recentInvoices} />
               </div>
             </div>
           )}
@@ -208,94 +313,6 @@ export default function Dashboard() {
           {activeTab === "create-invoice" && (
             <div className="space-y-6">
               <CreateInvoice />
-            </div>
-          )}
-
-          {activeTab === "settings" && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Settings</h2>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Business Profile</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-500 mb-4">
-                    Configure your business details and branding options
-                  </p>
-
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Company Name
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full p-2 border rounded-md"
-                          placeholder="Your Company Name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Email Address
-                        </label>
-                        <input
-                          type="email"
-                          className="w-full p-2 border rounded-md"
-                          placeholder="contact@yourcompany.com"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Business Address
-                      </label>
-                      <textarea
-                        className="w-full p-2 border rounded-md"
-                        rows={3}
-                        placeholder="Your business address"
-                      ></textarea>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Phone Number
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full p-2 border rounded-md"
-                          placeholder="+1 (555) 123-4567"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Tax ID / VAT Number
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full p-2 border rounded-md"
-                          placeholder="Tax ID / VAT Number"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Company Logo
-                      </label>
-                      <input type="file" className="w-full p-2" />
-                    </div>
-
-                    <div className="pt-4">
-                      <Button className="bg-blue-600 hover:bg-blue-700">
-                        Save Changes
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           )}
 
