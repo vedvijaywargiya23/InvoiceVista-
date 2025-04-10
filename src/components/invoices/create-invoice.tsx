@@ -120,10 +120,21 @@ export default function CreateInvoice() {
   const handleClientAdded = (newClient: any) => {
     // Get the latest clients from localStorage first
     const savedClients = JSON.parse(localStorage.getItem("clients") || "[]");
-    const updatedClients = [...savedClients, newClient];
-    setClients(updatedClients);
-    localStorage.setItem("clients", JSON.stringify(updatedClients));
-    window.dispatchEvent(new CustomEvent("clientsUpdated"));
+
+    // Check if client already exists to prevent duplicates
+    const clientExists = savedClients.some(
+      (client: any) =>
+        client.name.toLowerCase() === newClient.name.toLowerCase() ||
+        (client.email.toLowerCase() === newClient.email.toLowerCase() &&
+          newClient.email.trim() !== ""),
+    );
+
+    if (!clientExists) {
+      const updatedClients = [...savedClients, newClient];
+      setClients(updatedClients);
+      localStorage.setItem("clients", JSON.stringify(updatedClients));
+      window.dispatchEvent(new CustomEvent("clientsUpdated"));
+    }
   };
 
   // Logo functionality removed
@@ -330,20 +341,8 @@ export default function CreateInvoice() {
   };
 
   const saveInvoice = () => {
-    // If client name is entered but not selected from dropdown, save it as a new client
-    if (
-      invoiceData.client &&
-      !clients.some((c) => c.name === invoiceData.client)
-    ) {
-      const newClient = saveNewClient(invoiceData.client);
-      // If a new client was created, update the clients list
-      if (newClient) {
-        setClients((prevClients) => {
-          const updatedClients = [...prevClients, newClient];
-          return updatedClients;
-        });
-      }
-    }
+    // We no longer allow direct client creation from the invoice form
+    // All clients must be created through the Add Client dialog
 
     // For demo purposes, we'll save to localStorage
     const savedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
@@ -485,19 +484,6 @@ export default function CreateInvoice() {
                         >
                           <UserPlus className="h-4 w-4" />
                         </Button>
-                      }
-                    />
-                  </div>
-
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Or enter new client name"
-                      value={invoiceData.client}
-                      onChange={(e) =>
-                        setInvoiceData({
-                          ...invoiceData,
-                          client: e.target.value,
-                        })
                       }
                     />
                   </div>

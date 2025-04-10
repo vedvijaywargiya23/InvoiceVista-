@@ -77,6 +77,27 @@ export default function AddClientDialog({
       newErrors.address = "Address is required";
     }
 
+    // Check if client with same name or email already exists
+    const existingClients = JSON.parse(localStorage.getItem("clients") || "[]");
+    const nameExists = existingClients.some(
+      (client: any) =>
+        client.name.toLowerCase() === clientData.name.toLowerCase(),
+    );
+
+    if (nameExists) {
+      newErrors.name = "A client with this name already exists";
+    }
+
+    const emailExists = existingClients.some(
+      (client: any) =>
+        client.email.toLowerCase() === clientData.email.toLowerCase() &&
+        clientData.email.trim() !== "",
+    );
+
+    if (emailExists) {
+      newErrors.email = "A client with this email already exists";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

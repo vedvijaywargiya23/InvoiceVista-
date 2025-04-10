@@ -20,11 +20,13 @@ interface Invoice {
 interface RecentInvoicesProps {
   invoices?: Invoice[];
   title?: string;
+  currencySymbol?: string;
 }
 
 const RecentInvoices = ({
   invoices = [],
   title = "Recent Invoices",
+  currencySymbol = "$",
 }: RecentInvoicesProps) => {
   const [displayInvoices, setDisplayInvoices] = useState<Invoice[]>(invoices);
 
@@ -96,7 +98,7 @@ const RecentInvoices = ({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: currencySymbol === "₹" ? "INR" : "USD",
     }).format(amount);
   };
 
@@ -126,7 +128,15 @@ const RecentInvoices = ({
 
   return (
     <div className="w-full h-full bg-white rounded-lg shadow-sm p-4 overflow-hidden">
-      <h3 className="text-lg font-medium mb-4 text-gray-800">{title}</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium text-gray-800">{title}</h3>
+        <a
+          href="/invoices"
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          See All Invoices
+        </a>
+      </div>
       {displayInvoices.length === 0 ? (
         <div className="py-6 text-center text-gray-500">
           <p>No recent invoices found</p>
