@@ -13,8 +13,6 @@ import {
   X,
 } from "lucide-react";
 import DashboardStats from "./dashboard-stats";
-import RevenueChart from "./RevenueChart";
-import RecentInvoices from "./RecentInvoices";
 import ClientsList from "../clients/clients-list";
 import InvoicesList from "../invoices/invoices-list";
 import CreateInvoice from "../invoices/create-invoice";
@@ -284,11 +282,6 @@ export default function Dashboard() {
                 yearlyGrowth={dashboardData.yearlyGrowth}
                 currencySymbol="₹"
               />
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <RevenueChart />
-                <RecentInvoices invoices={dashboardData.recentInvoices} />
-              </div>
             </div>
           )}
 
