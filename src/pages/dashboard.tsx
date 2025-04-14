@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import FinancialSummary from "../components/dashboard/FinancialSummary";
-import RevenueChart from "../components/dashboard/RevenueChart";
-import RecentInvoices from "../components/dashboard/RecentInvoices";
 import DashboardStats from "../components/dashboard/dashboard-stats";
 
 const Dashboard = () => {
@@ -313,17 +311,6 @@ const Dashboard = () => {
                 console.log("Financial summary updated", data)
               }
             />
-
-            {/* Recent Invoices Section */}
-            <div className="grid grid-cols-1 gap-6">
-              <div>
-                <RecentInvoices
-                  title="Recent Invoices"
-                  invoices={dashboardData.recentInvoices}
-                  currencySymbol={dashboardData.currencySymbol}
-                />
-              </div>
-            </div>
 
             {/* Quick Actions Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm">
